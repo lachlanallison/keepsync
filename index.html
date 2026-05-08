@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KeepSync — Privacy Policy</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      max-width: 720px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      color: #222;
+      background: #fff;
+    }
+    @media (prefers-color-scheme: dark) {
+      body { color: #e4e4e4; background: #0d1117; }
+      a { color: #58a6ff; }
+    }
+    h1 { font-size: 1.75rem; margin-bottom: 0.25rem; }
+    .updated { color: #666; font-size: 0.9rem; margin-bottom: 1.5rem; }
+    h2 { font-size: 1.25rem; margin-top: 1.75rem; border-bottom: 1px solid #ddd; padding-bottom: 0.25rem; }
+    ul { padding-left: 1.25rem; }
+    code { background: #f3f4f6; padding: 0.1rem 0.3rem; border-radius: 4px; font-size: 0.9em; }
+    @media (prefers-color-scheme: dark) {
+      code { background: #21262d; }
+    }
+    footer { margin-top: 2rem; font-size: 0.85rem; color: #666; }
+  </style>
+</head>
+<body>
+  <h1>KeepSync Privacy Policy</h1>
+  <p class="updated">Last updated: 8 May 2026</p>
+
+  <p>
+    KeepSync is a <strong>self-hosted, open-source</strong> browser extension for syncing tabs,
+    bookmarks, and history across your own devices. We do not operate a central service,
+    and we do not collect, sell, or share your data.
+  </p>
+
+  <h2>1. What data the extension accesses</h2>
+  <ul>
+    <li><strong>Tabs:</strong> URLs, titles, favicon URLs, and window IDs — used to sync your open tabs to your own server.</li>
+    <li><strong>Bookmarks:</strong> Titles, URLs, folder structure, and positions — used for bookmark sync.</li>
+    <li><strong>History:</strong> Recent browser history entries — used to backfill sync gaps after a crash or offline period.</li>
+    <li><strong>Storage:</strong> Local settings (server URL, device token, sync preferences) are stored in the browser's local extension storage.</li>
+  </ul>
+
+  <h2>2. Where your data goes</h2>
+  <p>
+    All synced data is sent <strong>only</strong> to the self-hosted KeepSync server URL you configure in the extension settings.
+    There is no third-party server, analytics provider, or cloud backend operated by the extension authors.
+  </p>
+
+  <h2>3. Data retention</h2>
+  <p>
+    Data is retained on <em>your</em> server for as long as you choose to keep it.
+    You can purge synced data at any time from the extension's <strong>Advanced</strong> settings tab
+    or by deleting the server's SQLite database file.
+  </p>
+
+  <h2>4. Permissions rationale</h2>
+  <ul>
+    <li><code>tabs</code> — Required to read and sync open tabs.</li>
+    <li><code>bookmarks</code> — Required to read and write bookmarks for sync.</li>
+    <li><code>history</code> — Required to backfill missed events after offline periods.</li>
+    <li><code>downloads</code> — Used only when you explicitly export a backup from the settings page.</li>
+    <li><code>storage</code> — Stores local configuration and cached data.</li>
+    <li><code>alarms</code> — Schedules periodic background sync.</li>
+    <li><code>host_permissions</code> — Allows the extension to reach your self-hosted server on any domain.</li>
+  </ul>
+
+  <h2>5. Open source</h2>
+  <p>
+    The full source code is available at
+    <a href="https://github.com/keepsync/extension" target="_blank" rel="noopener">github.com/keepsync/extension</a>.
+    You can inspect exactly what the extension does and build it yourself.
+  </p>
+
+  <h2>6. Contact</h2>
+  <p>
+    If you have questions about this policy, open an issue on GitHub.
+  </p>
+
+  <footer>
+    KeepSync is licensed under the MIT License.
+  </footer>
+</body>
+</html>
