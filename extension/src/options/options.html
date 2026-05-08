@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KeepSync · Settings</title>
+  <link rel="icon" type="image/svg+xml" href="../../icons/icon.svg" />
+  <link rel="stylesheet" href="options.css?v=2">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="logo">
+        <h1>KeepSync</h1>
+      </div>
+      <div class="version">
+        <span>v1.0.0</span>
+        <button type="button" class="theme-toggle" id="themeToggle" title="Toggle theme" aria-label="Toggle theme">Theme</button>
+      </div>
+    </header>
+
+    <main class="main-content" id="optionsMain">
+      <aside class="sidebar" aria-label="Settings navigation">
+        <button type="button" class="sidebar-collapse-btn" id="sidebarCollapse"
+          aria-expanded="true" title="Minimise sidebar">⟨</button>
+        <nav class="tabs" aria-label="Settings sections">
+          <button type="button" class="tab-button active" data-tab="setup">
+            <span class="tab-button__emoji" aria-hidden="true">⚙️</span><span class="tab-button__full">Setup</span>
+          </button>
+          <button type="button" class="tab-button" data-tab="sync">
+            <span class="tab-button__emoji" aria-hidden="true">🔄</span><span class="tab-button__full">Sync</span>
+          </button>
+          <button type="button" class="tab-button" data-tab="bookmarks">
+            <span class="tab-button__emoji" aria-hidden="true">🔖</span><span class="tab-button__full">Bookmarks</span>
+          </button>
+          <button type="button" class="tab-button" data-tab="tabs">
+            <span class="tab-button__emoji" aria-hidden="true">📑</span><span class="tab-button__full">Tabs</span>
+          </button>
+          <button type="button" class="tab-button" data-tab="history">
+            <span class="tab-button__emoji" aria-hidden="true">🕐</span><span class="tab-button__full">History</span>
+          </button>
+          <button type="button" class="tab-button" data-tab="advanced">
+            <span class="tab-button__emoji" aria-hidden="true">🛠️</span><span class="tab-button__full">Advanced</span>
+          </button>
+        </nav>
+      </aside>
+
+      <div class="tab-panels">
+      <!-- =========================================================
+           Setup tab
+           ========================================================= -->
+      <div class="tab-content active" id="setup">
+
+        <div class="section">
+          <h2>Connect to your server</h2>
+          <p class="section-lede">
+            Point the extension at your self-hosted KeepSync server. The
+            first time you boot the server it prints a one-shot invite token
+            in the log — use that for your first device. After that, add
+            more browsers from this same page with a pairing code.
+          </p>
+
+          <div class="form-group">
+            <label for="serverUrl">Server URL</label>
+            <input type="url" id="serverUrl" placeholder="http://localhost:8787" required>
+            <small class="help-text">The public URL of your KeepSync server (http or https).</small>
+          </div>
+
+          <div class="form-group">
+            <label for="deviceName">Device name</label>
+            <input type="text" id="deviceName" placeholder="My Chrome · Laptop">
+            <small class="help-text">Shown in the Devices list so you can identify this browser.</small>
+          </div>
+
+          <div class="connection-status" id="connectionStatus" style="display: none;">
+            <span class="status-indicator" id="statusIndicator"></span>
+            <span class="status-text" id="statusText"></span>
+          </div>
+
+          <div class="form-actions">
+            <button id="testConnectionBtn" class="secondary-btn">Test connection</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Pair with an invite token</h2>
+          <p class="section-lede">
+            Recommended for your <strong>first</strong> device. Copy the token
+            from the server log (printed once on first boot) or generate one
+            with <code>keepsync-server invite --email you@example.com</code>.
+          </p>
+
+          <div class="form-group">
+            <label for="inviteToken">Invite token</label>
+            <input type="text" id="inviteToken" placeholder="Paste the token from the server log">
+            <small class="help-text">Tokens are single-use. No email delivery required.</small>
+          </div>
+
+          <div class="form-actions">
+            <button id="activateInviteBtn" class="primary-btn">Activate with invite</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Pair with another browser</h2>
+          <p class="section-lede">
+            Use this to add a second browser once one is already paired.
+            Generate a code on the paired device, then enter it here.
+          </p>
+
+          <div class="form-group">
+            <label for="pairingCode">Pairing code</label>
+            <input type="text" id="pairingCode" placeholder="e.g. 4F9-2K7" autocomplete="off">
+            <small class="help-text">Short single-use code from the Devices tab of a paired browser.</small>
+          </div>
+
+          <div class="form-actions">
+            <button id="createPairingCodeBtn" class="secondary-btn">Generate code (on this device)</button>
+            <button id="registerPairingBtn" class="primary-btn">Register with code</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Pair by email</h2>
+          <p class="section-lede">
+            Only works if the server has SMTP configured. Safe to skip for
+            self-hosted setups — use an invite token or pairing code instead.
+          </p>
+
+          <div class="form-group">
+            <label for="email">Email address</label>
+            <input type="email" id="email" placeholder="you@example.com">
+            <small class="help-text">The server emails a magic link; click it to activate this device.</small>
+          </div>
+
+          <div class="form-actions">
+            <button id="requestMagicLinkBtn" class="secondary-btn">Send magic link</button>
+          </div>
+        </div>
+
+        <!-- Shown once a magic link has been requested but not yet activated -->
+        <div class="section" id="activationSection" style="display: none;">
+          <h2>Check your email</h2>
+          <div class="activation-info">
+            <p>Open the email and click the magic link to activate this device.</p>
+            <p>The link expires in 15 minutes.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="activationToken">Or paste the activation token</label>
+            <input type="text" id="activationToken" placeholder="Paste the token from the email">
+          </div>
+
+          <div class="form-actions">
+            <button id="activateDeviceBtn" class="primary-btn">Activate device</button>
+            <button id="resendMagicLinkBtn" class="secondary-btn">Resend magic link</button>
+          </div>
+        </div>
+
+        <!-- Shown when this device is paired -->
+        <div class="section" id="connectedSection" style="display: none;">
+          <h2>Connected</h2>
+
+          <div class="success-message">
+            <div class="success-icon" aria-hidden="true">✓</div>
+            <div class="success-text">
+              <h3>This device is paired</h3>
+              <p>Tab sync is active. Changes propagate across your browsers in real time.</p>
+            </div>
+          </div>
+
+          <div class="device-info">
+            <div class="info-item">
+              <span class="label">Device ID</span>
+              <span class="value" id="deviceId">—</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Server</span>
+              <span class="value" id="connectedServer">—</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Last sync</span>
+              <span class="value" id="lastSync">—</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="renameDeviceName">Rename device</label>
+            <input type="text" id="renameDeviceName" placeholder="New device name">
+          </div>
+
+          <div class="form-actions">
+            <button id="renameDeviceBtn" class="secondary-btn">Update name</button>
+            <button id="disconnectBtn" class="danger-btn">Disconnect this device</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- =========================================================
+           Sync tab
+           ========================================================= -->
+      <div class="tab-content" id="sync">
+        <div class="section">
+          <h2>Sync preferences</h2>
+          <p class="section-lede">Control how aggressively this browser pushes and pulls tab state.</p>
+
+          <div class="form-group">
+            <div class="checkbox-group">
+              <input type="checkbox" id="enableSync" checked>
+              <label for="enableSync">Enable tab synchronization</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="syncInterval">Background sync interval</label>
+            <select id="syncInterval">
+              <option value="5000" selected>Every 5 seconds</option>
+              <option value="60000">Every minute</option>
+              <option value="300000">Every 5 minutes</option>
+              <option value="600000">Every 10 minutes</option>
+              <option value="1800000">Every 30 minutes</option>
+            </select>
+            <small class="help-text">The extension runs a timer at this interval while the background service worker is awake (e.g. every 5s if selected). Browsers can suspend that worker; a separate backup alarm (at least 1 minute) is also scheduled. Real-time mode still pushes on tab changes when enabled.</small>
+          </div>
+
+          <div class="form-group">
+            <div class="checkbox-group">
+              <input type="checkbox" id="enableRealtime" checked>
+              <label for="enableRealtime">Use real-time sync (WebSocket / SSE)</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="checkbox-group">
+              <input type="checkbox" id="enableNotifications" checked>
+              <label for="enableNotifications">Show sync notifications</label>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button id="manualSyncBtn" class="primary-btn">Sync now</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Status</h2>
+
+          <div class="sync-status-panel">
+            <div class="info-row">
+              <span class="label">Status</span>
+              <span class="value" id="syncStatusText">Unknown</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Queued events</span>
+              <span class="value" id="syncQueuedEvents">0</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Last sync</span>
+              <span class="value" id="syncLastTime">Never</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Server</span>
+              <span class="value" id="syncServerStatus">—</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Storage quota</h2>
+          <p class="section-lede">Server-side limit for your synced account. The bar uses a running quota counter; the breakdown below counts real <code>tab_history</code> rows and each row&rsquo;s stored size estimate (URL/title/favicon, not full SQLite overhead).</p>
+
+          <div class="quota-display" id="quotaDisplay">
+            <div class="quota-bar">
+              <div class="quota-fill" id="quotaFill" style="width: 0%"></div>
+            </div>
+            <div class="quota-text">
+              <span id="quotaUsed">0 KB</span> of <span id="quotaTotal">0 KB</span> used
+            </div>
+          </div>
+
+          <details id="quotaBreakdownDetails" class="quota-breakdown">
+            <summary>Tab history — row count &amp; recent event sizes</summary>
+            <p class="help-text" id="quotaHistorySummary"></p>
+            <p class="help-text value-bad" id="quotaDriftNote" style="display: none"></p>
+            <div class="quota-events-scroll">
+              <table class="data-table quota-events-table" id="quotaRecentEventsTable">
+                <thead>
+                  <tr>
+                    <th>When (UTC)</th>
+                    <th>Type</th>
+                    <th>Est. size</th>
+                    <th>URL</th>
+                  </tr>
+                </thead>
+                <tbody id="quotaRecentEventsBody"></tbody>
+              </table>
+            </div>
+          </details>
+
+          <div class="form-actions">
+            <button id="refreshQuotaBtn" class="secondary-btn">Refresh quota</button>
+            <button id="clearHistoryBtn" class="danger-btn">Clear local history</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- =========================================================
+           Bookmarks tab
+           ========================================================= -->
+      <div class="tab-content" id="bookmarks">
+        <div class="section">
+          <h2>Bookmark sync</h2>
+          <p class="section-lede">
+            Full tree sync with optimistic versioning on the server. IDs are portable
+            (UUID) so the same data can be applied in Chrome and Firefox. Conflicts
+            can be auto-resolved in settings, or you can choose on each 409.
+          </p>
+
+          <details class="bookmark-sync-settings-details" id="bookmarkSyncSettingsDetails" open>
+            <summary class="bookmark-sync-settings-summary">
+              Bookmark sync settings
+              <span class="bookmark-sync-settings-hint">hide</span>
+            </summary>
+            <div class="bookmark-sync-settings-body">
+          <div class="form-group">
+            <div class="checkbox-group">
+              <input type="checkbox" id="bookmarkSyncEnabled" checked>
+              <label for="bookmarkSyncEnabled">Enable bookmark sync</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="bookmarkSyncDirection">Direction</label>
+            <select id="bookmarkSyncDirection">
+              <option value="bidirectional">Both ways (push + pull on schedule)</option>
+              <option value="upload_only">Upload only (this browser to server)</option>
+              <option value="download_only">Download only (server to this browser)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="bookmarkConflictAction">On version conflict (another device changed bookmarks)</label>
+            <select id="bookmarkConflictAction">
+              <option value="prompt">Ask in this page (notification when pending)</option>
+              <option value="use_server">Use server copy</option>
+              <option value="use_local">Use this browser&rsquo;s copy (overwrite server)</option>
+              <option value="auto_prefer">Use auto pick below (no prompt)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="bookmarkAutoResolution">If auto (no prompt)</label>
+            <select id="bookmarkAutoResolution">
+              <option value="server_wins">Prefer server</option>
+              <option value="local_wins">Prefer this browser</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="bookmarkDeletePolicy">After pull, bookmarks missing from the server</label>
+            <select id="bookmarkDeletePolicy">
+              <option value="match_server">Remove locally to match server</option>
+              <option value="keep_local">Keep local extras (and re-upload on next push)</option>
+            </select>
+          </div>
+
+          <p class="form-actions">
+            <button type="button" class="primary-btn" id="bookmarkSyncNowBtn">Sync bookmarks now</button>
+            <span class="help-text" id="bookmarkSyncStatus">—</span>
+          </p>
+
+          <div class="form-group bookmark-conflict" id="bookmarkConflictBox" style="display: none">
+            <h3>Pending conflict</h3>
+            <p class="section-lede" id="bookmarkConflictText">The server has a newer version than the copy you last synced.</p>
+            <p class="form-actions">
+              <button type="button" class="primary-btn" id="bookmarkUseServerBtn">Use server</button>
+              <button type="button" class="secondary-btn" id="bookmarkUseLocalBtn">Use this browser</button>
+            </p>
+          </div>
+            </div>
+          </details>
+        </div>
+
+        <div class="section bookmark-browser-section" id="bookmarkBrowserSection">
+          <h2>Local bookmarks</h2>
+          <p class="section-lede">
+            Browse and edit the same folder tree your browser uses. Edits are written with the
+            native bookmarks API; when upload or bidirectional sync is on, changes are picked up for the next push.
+          </p>
+          <p class="help-text bookmark-browser-unavailable" id="bookmarkBrowserUnavailable" style="display: none;" role="status"></p>
+          <div class="bookmark-browser-toolbar form-actions">
+            <button type="button" class="secondary-btn" id="bookmarkTreeRefresh">Refresh tree</button>
+          </div>
+          <div class="bookmark-tree" id="bookmarkTreeRoot" role="tree" aria-label="Local bookmarks"></div>
+        </div>
+      </div>
+
+      <!-- =========================================================
+           Tabs tab — current snapshots across devices
+           ========================================================= -->
+      <div class="tab-content" id="tabs">
+        <div class="section">
+          <h2>Synced tabs across devices</h2>
+          <p class="section-lede">
+            Live tab snapshots from every paired browser. Filter by device or search by title and URL.
+          </p>
+
+          <div class="history-filters">
+            <div class="form-group">
+              <label for="tabsDeviceFilter">Device</label>
+              <select id="tabsDeviceFilter">
+                <option value="">All devices</option>
+              </select>
+            </div>
+            <div class="form-actions">
+              <button type="button" id="refreshTabsBtn" class="primary-btn">Refresh</button>
+            </div>
+          </div>
+
+          <p class="cache-notice" id="currentTabsCacheNotice" style="display: none;" role="status"></p>
+          <div class="history-toolbar">
+            <input type="search" id="currentTabsSearch" placeholder="Search by title or URL">
+          </div>
+          <div class="history-list tabs-synced-list" id="currentTabsList">
+            <div class="loading-message" id="currentTabsLoading">Loading tabs…</div>
+            <div class="empty-message" id="currentTabsEmpty" style="display: none;">
+              No synced tabs yet. Pair another device and sync to see them here.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- =========================================================
+           History tab — aggregated tab sessions
+           ========================================================= -->
+      <div class="tab-content" id="history">
+        <div class="section">
+          <h2>Tab history across devices</h2>
+          <p class="section-lede">
+            Each row is one browser tab over its lifetime: when it first appeared in sync, last activity,
+            a close timestamp when the extension recorded a tab close, and whether it still appears in the
+            current snapshot. Rows with correlation <code>hist:…</code> come from browser history backfill;
+            when the same URL also has a normal tab session on this page, the backfill row is hidden.
+            Clear / export here affects <strong>server-stored</strong> history only.
+          </p>
+
+          <h3 class="hist-sub">Server query</h3>
+          <div class="history-filters hist-sessions-filters">
+            <div class="form-group">
+              <label for="histSessionsDeviceFilter">Device</label>
+              <select id="histSessionsDeviceFilter">
+                <option value="">All devices</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="histSessionsStatus">Status</label>
+              <select id="histSessionsStatus">
+                <option value="all">All</option>
+                <option value="open">Still open</option>
+                <option value="closed">Not open</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="histSessionsTitle">Title contains</label>
+              <input type="search" id="histSessionsTitle" placeholder="Server filter">
+            </div>
+            <div class="form-group">
+              <label for="histSessionsUrl">URL contains</label>
+              <input type="search" id="histSessionsUrl" placeholder="Server filter">
+            </div>
+            <div class="form-group">
+              <label for="histSessionsOpenedFrom">Opened from</label>
+              <input type="text" id="histSessionsOpenedFrom" placeholder="ISO datetime">
+            </div>
+            <div class="form-group">
+              <label for="histSessionsOpenedTo">Opened to</label>
+              <input type="text" id="histSessionsOpenedTo" placeholder="optional">
+            </div>
+            <div class="form-group">
+              <label for="histSessionsClosedFrom">Closed from</label>
+              <input type="text" id="histSessionsClosedFrom" placeholder="close event time">
+            </div>
+            <div class="form-group">
+              <label for="histSessionsClosedTo">Closed to</label>
+              <input type="text" id="histSessionsClosedTo" placeholder="optional">
+            </div>
+            <div class="form-group">
+              <label for="histSessionsSort">Sort</label>
+              <select id="histSessionsSort">
+                <option value="opened_desc">Opened · newest first</option>
+                <option value="opened_asc">Opened · oldest first</option>
+                <option value="last_active_desc">Last active · newest</option>
+                <option value="last_active_asc">Last active · oldest</option>
+                <option value="closed_desc">Closed · newest</option>
+                <option value="closed_asc">Closed · oldest</option>
+              </select>
+            </div>
+            <div class="form-actions">
+              <button type="button" id="loadHistSessionsBtn" class="primary-btn">Load from server</button>
+              <button type="button" id="exportHistSessionsBtn" class="secondary-btn">Export JSON</button>
+            </div>
+          </div>
+
+          <h3 class="hist-sub">Table filters</h3>
+          <p class="help-text">Applied to the rows already loaded in this page (no extra server request).</p>
+          <div class="history-filters hist-table-filters">
+            <div class="form-group">
+              <label for="histTableTitle">Title</label>
+              <input type="search" id="histTableTitle" placeholder="contains…">
+            </div>
+            <div class="form-group">
+              <label for="histTableUrl">URL</label>
+              <input type="search" id="histTableUrl" placeholder="contains…">
+            </div>
+            <div class="form-group">
+              <label for="histTableDevice">Device contains</label>
+              <input type="search" id="histTableDevice" placeholder="id substring">
+            </div>
+            <div class="form-group">
+              <label for="histTableStatus">Status</label>
+              <select id="histTableStatus">
+                <option value="">Any</option>
+                <option value="open">Open</option>
+                <option value="had_close">Had close event</option>
+                <option value="no_close_not_open">No close event &amp; not open</option>
+              </select>
+            </div>
+          </div>
+
+          <p class="hist-meta" id="histSessionsMeta" role="status">Load a page to see results.</p>
+          <div class="hist-sessions-table-wrap" id="histSessionsTableWrap">
+            <table class="hist-sessions-table" id="histSessionsTable">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>URL</th>
+                  <th>Device</th>
+                  <th>Opened</th>
+                  <th>Last active</th>
+                  <th>Closed (telemetry)</th>
+                  <th>Status</th>
+                  <th>Events</th>
+                  <th>Correlation</th>
+                </tr>
+              </thead>
+              <tbody id="histSessionsTbody"></tbody>
+            </table>
+          </div>
+          <div class="form-actions hist-pagination">
+            <button type="button" id="histSessionsPrev" class="secondary-btn">Previous page</button>
+            <button type="button" id="histSessionsNext" class="secondary-btn">Next page</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- =========================================================
+           Advanced tab
+           ========================================================= -->
+      <div class="tab-content" id="advanced">
+
+        <div class="section">
+          <h2>Raw tab events</h2>
+          <p class="section-lede">
+            Fine-grained rows from <code>tab_history</code> (create / update / close, history API backfill, and conflicts).
+            <strong>Focus</strong> (tab activated) updates live <code>tabs_current</code> / ordering but is not stored here.
+            For the cross-device session table, use the <strong>History</strong> tab.
+          </p>
+
+          <div class="history-filters">
+            <div class="form-group">
+              <label for="rawDeviceFilter">Device</label>
+              <select id="rawDeviceFilter">
+                <option value="">All devices</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="eventTypeFilter">Event type</label>
+              <select id="eventTypeFilter">
+                <option value="">All events</option>
+                <option value="create">Tab created</option>
+                <option value="update">Tab updated</option>
+                <option value="close">Tab closed</option>
+                <option value="conflict" title="Event rejected because the server had newer data">Conflict</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="historyViewMode">Layout</label>
+              <select id="historyViewMode" title="How to list sync history">
+                <option value="timeline">Timeline (newest first)</option>
+                <option value="byTab">By tab (navigation path)</option>
+                <option value="tree">Tree (device → tab → path)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <div class="checkbox-group">
+                <input type="checkbox" id="historyDedupeDisplay" checked />
+                <label for="historyDedupeDisplay">Hide overlapping / noisy rows in the list below</label>
+              </div>
+              <p class="help-text" style="margin-top: 6px">
+                Drops browser history backfill (<code>history</code>) when a tab sync row exists for the same URL on that device within ~90s, and collapses same-tab same-URL <code>update</code> bursts within 6s (same idea as the server, for rows the server already stored).
+              </p>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" id="refreshHistoryBtn" class="secondary-btn">Refresh</button>
+              <button type="button" id="exportHistoryBtn" class="secondary-btn">Export JSON</button>
+            </div>
+          </div>
+
+          <p class="history-section-help" id="historyEventsHelp">
+            <strong>Conflict</strong> — an update from this device was not applied because the server
+            already had a newer state. While a tab is loading, the extension merges to one update per URL.
+          </p>
+          <p class="cache-notice" id="historyCacheNotice" style="display: none;" role="status"></p>
+          <div id="historyTabFocusBar" class="history-focus-bar" style="display: none" role="status" aria-live="polite">
+            <span class="history-focus-text" id="historyTabFocusText"></span>
+            <button type="button" id="historyTabFocusClear" class="secondary-btn">Show all events</button>
+          </div>
+          <div class="history-toolbar">
+            <input type="search" id="historySearch" placeholder="Search raw events">
+            <button id="historySeeMore" class="secondary-btn" style="display: none;">See more</button>
+          </div>
+          <div class="history-list" id="historyList">
+            <div class="loading-message" id="historyLoading">Loading…</div>
+            <div class="empty-message" id="historyEmpty" style="display: none;">
+              No events yet.
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Devices</h2>
+          <p class="section-lede">Every browser currently paired to this user account. Revoke any device to invalidate its token and force it back to the setup screen in real time.</p>
+
+          <div class="form-actions">
+            <button id="refreshDevicesBtn" class="secondary-btn">Refresh devices</button>
+          </div>
+
+          <p class="cache-notice" id="devicesCacheNotice" style="display: none;" role="status"></p>
+
+          <div class="device-list" id="deviceList">
+            <div class="loading-message" id="devicesLoading">Loading devices…</div>
+            <div class="empty-message" id="devicesEmpty" style="display: none;">
+              No devices found.
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Appearance</h2>
+
+          <div class="form-group">
+            <label for="theme">Theme</label>
+            <select id="theme">
+              <option value="auto">Follow system</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <div class="checkbox-group">
+              <input type="checkbox" id="showFavicons" checked>
+              <label for="showFavicons">Show favicons in tab lists</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="checkbox-group">
+              <input type="checkbox" id="compactView">
+              <label for="compactView">Compact popup layout</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="maxTabsPerDevice">Max tabs to show per device</label>
+            <input type="number" id="maxTabsPerDevice" min="10" max="100" value="50">
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Data</h2>
+
+          <div class="form-actions advanced-data-actions" role="group" aria-label="Local extension data">
+            <button id="exportDataBtn" class="secondary-btn">Export all data</button>
+            <button id="importDataBtn" class="secondary-btn">Import data</button>
+            <input type="file" id="importFileInput" style="display: none;" accept=".json">
+            <button id="purgeServerDataBtn" type="button" class="danger-btn">Delete all synced data on server…</button>
+            <button id="clearAllDataBtn" class="danger-btn">Clear all local data</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Diagnostics</h2>
+
+          <div class="debug-info" id="debugInfo">
+            <div class="info-item">
+              <span class="label">Extension version</span>
+              <span class="value" id="extensionVersion">1.0.0</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Browser</span>
+              <span class="value" id="browserInfo">—</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Storage used</span>
+              <span class="value" id="storageUsed">—</span>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button id="viewErrorLogBtn" class="secondary-btn">View error log</button>
+            <button id="clearErrorLogBtn" class="secondary-btn">Clear error log</button>
+          </div>
+        </div>
+
+      </div>
+      </div>
+    </main>
+
+    <div class="notification" id="notification" style="display: none;">
+      <span class="notification-message" id="notificationMessage"></span>
+      <button class="notification-close" id="notificationClose" aria-label="Dismiss">×</button>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+      <div class="spinner" aria-hidden="true"></div>
+      <div class="loading-text" id="loadingText">Loading…</div>
+    </div>
+  </div>
+
+  <dialog id="dangerConfirmModal" class="danger-confirm-dialog">
+    <h3 id="dangerConfirmTitle"></h3>
+    <div id="dangerConfirmBody" class="danger-confirm-body"></div>
+    <div class="form-actions danger-confirm-actions">
+      <button type="button" class="secondary-btn" id="dangerConfirmCancelBtn">Cancel</button>
+      <button type="button" class="danger-btn" id="dangerConfirmConfirmBtn">Confirm</button>
+    </div>
+  </dialog>
+
+  <script src="../../shared/logger.js"></script>
+  <script src="../../shared/api-client.js"></script>
+  <script src="../../shared/storage.js"></script>
+  <script src="../../shared/quota-ui.js"></script>
+  <script src="../../shared/tab-favicon.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>

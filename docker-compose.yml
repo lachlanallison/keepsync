@@ -1,0 +1,63 @@
+services:
+  # KeepSync Server
+  keepsync-server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: keepsync-server
+    restart: unless-stopped
+    environment:
+      - SERVER_ADDRESS=:8787
+      - DATABASE_URL=/app/data/keepsync.db
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set}
+      - QUOTA_LIMIT_MB=${QUOTA_LIMIT_MB:-100}
+      - TOKEN_TTL=${TOKEN_TTL:-720h}
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USERNAME=${SMTP_USERNAME:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - SMTP_FROM=${SMTP_FROM:-noreply@localhost}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:?ALLOWED_ORIGINS must be set}
+    volumes:
+      - keepsync-data:/app/data
+    ports:
+      - "8787:8787"
+    networks:
+      - keepsync-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8787/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Reverse Proxy (Caddy)
+  caddy:
+    image: caddy:2-alpine
+    container_name: keepsync-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+      - caddy-data:/data
+      - caddy-config:/config
+    networks:
+      - keepsync-network
+    depends_on:
+      - keepsync-server
+    environment:
+      - DOMAIN=${DOMAIN:-localhost}
+
+volumes:
+  keepsync-data:
+    driver: local
+  caddy-data:
+    driver: local
+  caddy-config:
+    driver: local
+
+networks:
+  keepsync-network:
+    driver: bridge

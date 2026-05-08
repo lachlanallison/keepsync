@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KeepSync</title>
+  <link rel="icon" type="image/svg+xml" href="../../icons/icon.svg" />
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="header">
+    <div class="logo">
+      <h1>KeepSync</h1>
+    </div>
+    <div class="sync-status" id="syncStatusBar">
+      <span class="status-indicator" id="statusIndicator"></span>
+      <span class="status-text" id="statusText">Checking…</span>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <!-- Configuration Section (shown when not configured) -->
+    <div class="section setup-section" id="setupSection" style="display: none;">
+      <h2>Setup Required</h2>
+      <p>Configure your server to start syncing tabs.</p>
+      <button class="primary-btn" id="openOptionsBtn">Open Settings</button>
+    </div>
+
+    <!-- Sync Actions -->
+    <div class="section actions-section" id="actionsSection">
+      <div class="action-buttons">
+        <button class="sync-btn" id="manualSyncBtn" type="button" title="Sync now">
+          <span class="sync-icon">⟳</span>
+          <span>Sync Now</span>
+        </button>
+        <button class="settings-btn" id="settingsBtn" type="button" title="Settings" aria-label="Settings">
+          <span class="settings-icon">⚙</span>
+        </button>
+      </div>
+      
+      <div class="sync-info" id="syncInfo">
+        <div class="info-item">
+          <span class="label">Last sync:</span>
+          <span class="value" id="lastSyncTime">Never</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Local tabs:</span>
+          <span class="value" id="localTabCount">0</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Queued events:</span>
+          <span class="value" id="queuedEvents">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Remote Devices -->
+    <div class="section devices-section" id="devicesSection">
+      <h2>
+        <span>Other Devices</span>
+        <button class="refresh-btn" id="refreshBtn" type="button" title="Pull latest from server and refresh list">⟳</button>
+      </h2>
+
+      <p class="cache-notice" id="devicesCacheNotice" style="display: none;" role="status" aria-live="polite"></p>
+      
+      <div class="devices-search">
+        <input type="search" id="deviceSearch" placeholder="Search tabs" autocomplete="off">
+      </div>
+      
+      <div class="devices-list" id="devicesList">
+        <div class="loading-message" id="devicesLoading">Loading devices...</div>
+        <div class="empty-message" id="devicesEmpty" style="display: none;">
+          No other devices found. Install the extension on other browsers to see their tabs here.
+        </div>
+      </div>
+    </div>
+
+    <!-- Quota Information -->
+    <div class="section quota-section" id="quotaSection" style="display: none;">
+      <div class="quota-info">
+        <div class="quota-bar">
+          <div class="quota-fill" id="quotaFill" style="width: 0%"></div>
+        </div>
+        <div class="quota-text">
+          <span id="quotaUsage">0 KB</span> / <span id="quotaLimit">0 KB</span> used
+        </div>
+        <div class="quota-status" id="quotaStatus"></div>
+      </div>
+    </div>
+
+    <!-- Error Messages -->
+    <div class="section error-section" id="errorSection" style="display: none;">
+      <div class="error-message" id="errorMessage"></div>
+    </div>
+
+    <div class="toast toast-success" id="toastSuccess" style="display: none;" role="status" aria-live="polite">
+      <span id="toastSuccessText"></span>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+      <div class="spinner"></div>
+      <div class="loading-text" id="loadingText">Syncing...</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-links">
+      <a href="#" id="historyLink">History</a>
+      <a href="#" id="testServerLink">Test server</a>
+      <a href="#" id="helpLink">Help</a>
+    </div>
+  </div>
+
+  <script src="../../shared/logger.js"></script>
+  <script src="../../shared/api-client.js"></script>
+  <script src="../../shared/storage.js"></script>
+  <script src="../../shared/quota-ui.js"></script>
+  <script src="../../shared/tab-favicon.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

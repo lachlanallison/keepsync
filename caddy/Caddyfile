@@ -1,0 +1,114 @@
+# Caddyfile for KeepSync Server
+# Automatic HTTPS with Let's Encrypt
+
+{
+    # Global options
+    email admin@{$DOMAIN:localhost}
+    
+    # Security headers
+    header {
+        # Security headers
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        
+        # Remove server information
+        -Server
+    }
+}
+
+# Main site
+{$DOMAIN:localhost} {
+    # Reverse proxy to Go server
+    reverse_proxy keepsync-server:8787 {
+        # SSE/WebSocket: avoid response buffering and long-stream quirks
+        flush_interval -1
+        # Health check
+        health_uri /healthz
+        health_interval 30s
+        health_timeout 5s
+        
+        # Headers for proper forwarding
+        header_up Host {host}
+        header_up X-Real-IP {remote}
+        header_up X-Forwarded-For {remote}
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-Host {host}
+        
+        # WebSocket support
+        header_up Connection {>Connection}
+        header_up Upgrade {>Upgrade}
+    }
+    
+    # API rate limiting
+    rate_limit {
+        zone api {
+            key {remote}
+            events 100
+            window 1m
+        }
+        
+        # Apply to API endpoints
+        match path /auth/* /tabs/* /devices/* /history/* /quota/*
+    }
+    
+    # Security for sensitive endpoints
+    @auth_endpoints {
+        path /auth/magic-link
+    }
+    
+    handle @auth_endpoints {
+        # Additional rate limiting for auth endpoints
+        rate_limit {
+            zone auth {
+                key {remote}
+                events 5
+                window 1m
+            }
+        }
+        
+        reverse_proxy keepsync-server:8787 {
+            flush_interval -1
+        }
+    }
+    
+    # Logging
+    log {
+        output file /var/log/caddy/keepsync.log {
+            roll_size 100mb
+            roll_keep 5
+            roll_keep_for 720h
+        }
+        
+        format json
+        
+        level INFO
+    }
+    
+    # Error handling
+    handle_errors {
+        @5xx expression `{http.error.status_code} >= 500`
+        handle @5xx {
+            respond "Server temporarily unavailable" 503
+        }
+        
+        @4xx expression `{http.error.status_code} >= 400 && {http.error.status_code} < 500`
+        handle @4xx {
+            respond "Bad request" 400
+        }
+    }
+}
+
+# Health check endpoint for load balancers
+:8081 {
+    respond /health "OK" 200
+    
+    # Metrics endpoint (for monitoring)
+    handle /metrics {
+        reverse_proxy keepsync-server:8787 {
+            flush_interval -1
+        }
+    }
+}

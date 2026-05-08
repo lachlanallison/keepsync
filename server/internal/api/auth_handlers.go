@@ -1,0 +1,276 @@
+package api
+
+import (
+	"encoding/json"
+	"log"
+	"net/http"
+	"net/mail"
+	"strings"
+
+	"keepsync-server/internal/models"
+)
+
+// validateEmail checks that a string parses as a valid RFC 5322 address.
+// We return the canonical address (trimmed, lower-cased) when valid.
+func validateEmail(raw string) (string, bool) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return "", false
+	}
+	addr, err := mail.ParseAddress(raw)
+	if err != nil {
+		return "", false
+	}
+	return strings.ToLower(addr.Address), true
+}
+
+// createMagicLink handles POST /auth/magic-link
+func (r *Router) createMagicLink(w http.ResponseWriter, req *http.Request) {
+	var request models.MagicLinkRequest
+	if err := json.NewDecoder(req.Body).Decode(&request); err != nil {
+		writeError(w, "Invalid JSON payload", http.StatusBadRequest)
+		return
+	}
+
+	if request.Email == "" {
+		writeError(w, "Email is required", http.StatusBadRequest)
+		return
+	}
+
+	email, ok := validateEmail(request.Email)
+	if !ok {
+		writeError(w, "Invalid email address", http.StatusBadRequest)
+		return
+	}
+
+	// Dev mode shortcut: return a device token directly
+	if r.config.DevMode {
+		browser := req.Header.Get("X-Browser")
+		if browser == "" {
+			browser = "unknown"
+		}
+
+		deviceName := request.DeviceName
+		if deviceName == "" {
+			deviceName = "Dev Device"
+		}
+
+		response, err := r.authService.DevLogin(email, deviceName, browser)
+		if err != nil {
+			log.Printf("Failed to create dev device: %v", err)
+			writeError(w, "Failed to create dev device", http.StatusInternalServerError)
+			return
+		}
+
+		writeJSON(w, response)
+		return
+	}
+
+	token, err := r.authService.GenerateMagicLink(email, request.DeviceName)
+	if err != nil {
+		log.Printf("Failed to generate magic link: %v", err)
+		writeError(w, "Failed to generate magic link", http.StatusInternalServerError)
+		return
+	}
+
+	// Build an HTTPS URL that the extension or user can open to complete
+	// activation. The activation endpoint itself still takes the token in the
+	// POST body; the link is a convenience so end users can copy/paste or
+	// click through a web form that then calls the API.
+	link := r.buildMagicLinkURL(req, token)
+
+	if r.config.IsSMTPEnabled() {
+		if err := r.mailer.SendMagicLink(email, link, token); err != nil {
+			log.Printf("Failed to send magic link email to %s: %v", email, err)
+			writeError(w, "Failed to send magic link email", http.StatusBadGateway)
+			return
+		}
+		writeJSON(w, map[string]string{
+			"message": "Magic link sent to your email",
+		})
+		return
+	}
+
+	// SMTP not configured — return the token so self-hosters without email can
+	// still bootstrap.  Never enable this behaviour in production deployments
+	// that rely on email-based authentication.
+	writeJSON(w, map[string]string{
+		"message": "Magic link generated (SMTP not configured)",
+		"token":   token,
+		"link":    link,
+	})
+}
+
+// activateDevice handles POST /auth/activate
+func (r *Router) activateDevice(w http.ResponseWriter, req *http.Request) {
+	var request models.ActivateRequest
+	if err := json.NewDecoder(req.Body).Decode(&request); err != nil {
+		writeError(w, "Invalid JSON payload", http.StatusBadRequest)
+		return
+	}
+
+	// Validate token
+	if request.Token == "" {
+		writeError(w, "Token is required", http.StatusBadRequest)
+		return
+	}
+
+	// Extract device info from request headers
+	browser := req.Header.Get("X-Browser")
+	if browser == "" {
+		browser = "unknown"
+	}
+
+	deviceName := req.Header.Get("X-Device-Name")
+	if deviceName == "" {
+		deviceName = "Unnamed Device"
+	}
+
+	// Activate device
+	response, err := r.authService.ActivateDevice(request.Token, deviceName, browser)
+	if err != nil {
+		log.Printf("Failed to activate device: %v", err)
+		writeError(w, "Invalid or expired token", http.StatusUnauthorized)
+		return
+	}
+
+	writeJSON(w, response)
+}
+
+// createPairingCode handles POST /auth/pairing
+//
+// Generates a short-lived numeric code tied to a user (identified by email)
+// which a new device can redeem via POST /devices/register. This is the
+// SMTP-free fallback described in the PRD.
+func (r *Router) createPairingCode(w http.ResponseWriter, req *http.Request) {
+	var payload struct {
+		Email string `json:"email"`
+	}
+	if err := json.NewDecoder(req.Body).Decode(&payload); err != nil {
+		writeError(w, "Invalid JSON payload", http.StatusBadRequest)
+		return
+	}
+
+	if payload.Email == "" {
+		writeError(w, "Email is required", http.StatusBadRequest)
+		return
+	}
+
+	email, ok := validateEmail(payload.Email)
+	if !ok {
+		writeError(w, "Invalid email address", http.StatusBadRequest)
+		return
+	}
+
+	code, err := r.authService.GeneratePairingCode(email)
+	if err != nil {
+		log.Printf("Failed to generate pairing code: %v", err)
+		writeError(w, "Failed to generate pairing code", http.StatusInternalServerError)
+		return
+	}
+
+	writeJSON(w, map[string]string{
+		"message":      "Pairing code generated",
+		"pairing_code": code,
+	})
+}
+
+// activateInvite handles POST /auth/invite
+//
+// Activates a device using an invite token generated by the server admin
+// via `keepsync-server invite --email <addr>`. This path is the
+// SMTP-free bootstrap: the admin delivers the token out-of-band (password
+// manager, SSH, messaging app) and the user pastes it into the extension.
+func (r *Router) activateInvite(w http.ResponseWriter, req *http.Request) {
+	var payload struct {
+		Token      string `json:"token"`
+		DeviceName string `json:"device_name"`
+	}
+	if err := json.NewDecoder(req.Body).Decode(&payload); err != nil {
+		writeError(w, "Invalid JSON payload", http.StatusBadRequest)
+		return
+	}
+
+	token := strings.TrimSpace(payload.Token)
+	if token == "" {
+		writeError(w, "Invite token is required", http.StatusBadRequest)
+		return
+	}
+
+	browser := req.Header.Get("X-Browser")
+	if browser == "" {
+		browser = "unknown"
+	}
+
+	deviceName := strings.TrimSpace(payload.DeviceName)
+	if deviceName == "" {
+		deviceName = req.Header.Get("X-Device-Name")
+	}
+	if deviceName == "" {
+		deviceName = "Unnamed Device"
+	}
+
+	response, err := r.authService.ActivateWithInvite(token, deviceName, browser)
+	if err != nil {
+		log.Printf("Failed to activate invite: %v", err)
+		writeError(w, "Invalid or expired invite token", http.StatusUnauthorized)
+		return
+	}
+
+	writeJSON(w, response)
+}
+
+// registerDevice handles POST /devices/register (for pairing flow)
+//
+// The caller supplies a `pairing_code` from /auth/pairing plus a device name
+// and the server issues a device JWT equivalent to the magic-link flow.
+func (r *Router) registerDevice(w http.ResponseWriter, req *http.Request) {
+	var payload models.PairingRequest
+	if err := json.NewDecoder(req.Body).Decode(&payload); err != nil {
+		writeError(w, "Invalid JSON payload", http.StatusBadRequest)
+		return
+	}
+
+	code := strings.TrimSpace(payload.PairingCode)
+	if code == "" {
+		writeError(w, "Pairing code is required", http.StatusBadRequest)
+		return
+	}
+
+	browser := req.Header.Get("X-Browser")
+	if browser == "" {
+		browser = "unknown"
+	}
+
+	deviceName := strings.TrimSpace(payload.DeviceName)
+	if deviceName == "" {
+		deviceName = req.Header.Get("X-Device-Name")
+	}
+	if deviceName == "" {
+		deviceName = "Unnamed Device"
+	}
+
+	response, err := r.authService.RegisterDeviceWithPairing(code, deviceName, browser)
+	if err != nil {
+		log.Printf("Failed to register device via pairing: %v", err)
+		writeError(w, "Invalid or expired pairing code", http.StatusUnauthorized)
+		return
+	}
+
+	writeJSON(w, response)
+}
+
+// buildMagicLinkURL constructs a magic-link URL. When `DOMAIN` is configured
+// we assume TLS is terminated at a reverse proxy and use https://. Otherwise
+// we fall back to the incoming request's host and scheme so local development
+// over plain HTTP still produces a clickable link.
+func (r *Router) buildMagicLinkURL(req *http.Request, token string) string {
+	if r.config.Domain != "" {
+		return "https://" + r.config.Domain + "/auth/activate?token=" + token
+	}
+	scheme := "http"
+	if req.TLS != nil {
+		scheme = "https"
+	}
+	return scheme + "://" + req.Host + "/auth/activate?token=" + token
+}
