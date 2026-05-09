@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — KeepSync</title>
+  <meta name="description" content="KeepSync privacy policy. Self-hosted, open-source browser extension. No data collection by the extension authors.">
+  <meta name="robots" content="index, follow">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="16x16" href="icon-16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="apple-touch-icon" sizes="128x128" href="icon-128.png">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://keepsync.github.io/privacy.html">
+  <meta property="og:title" content="Privacy Policy — KeepSync">
+  <meta property="og:description" content="KeepSync privacy policy. Self-hosted, open-source browser extension.">
+  <meta property="og:image" content="https://keepsync.github.io/og-image.png">
+  <meta property="og:site_name" content="KeepSync">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://keepsync.github.io/privacy.html">
+  <meta property="twitter:title" content="Privacy Policy — KeepSync">
+  <meta property="twitter:description" content="KeepSync privacy policy. Self-hosted, open-source browser extension.">
+  <meta property="twitter:image" content="https://keepsync.github.io/og-image.png">
+
+  <meta name="theme-color" content="#0f172a">
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0f172a;
+      --bg-secondary: #1e293b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #3b82f6;
+      --border: #334155;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #ffffff;
+        --bg-secondary: #f8fafc;
+        --text: #0f172a;
+        --text-muted: #64748b;
+        --accent: #2563eb;
+        --border: #e2e8f0;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+    header {
+      padding: 2rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .logo img { width: 28px; height: 28px; }
+    .back-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.95rem;
+    }
+    .back-link:hover { color: var(--text); }
+
+    main { padding: 2.5rem 0; flex: 1; }
+    h1 { font-size: 1.75rem; margin-bottom: 0.25rem; }
+    .updated { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+    h2 { font-size: 1.25rem; margin-top: 1.75rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; }
+    ul { padding-left: 1.25rem; }
+    code { background: var(--bg-secondary); padding: 0.1rem 0.3rem; border-radius: 4px; font-size: 0.9em; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    footer {
+      padding: 2rem 0;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+    footer a { color: var(--text-muted); }
+    footer a:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <nav>
+        <a href="/" class="logo">
+          <img src="icon-32.png" alt="" width="28" height="28">
+          KeepSync
+        </a>
+        <a href="/" class="back-link">&larr; Back to home</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <h1>KeepSync Privacy Policy</h1>
+      <p class="updated">Last updated: 8 May 2026</p>
+
+      <p>
+        KeepSync is a <strong>self-hosted, open-source</strong> browser extension for syncing tabs,
+        bookmarks, and history across your own devices. We do not operate a central service,
+        and we do not collect, sell, or share your data.
+      </p>
+
+      <h2>1. What data the extension accesses</h2>
+      <ul>
+        <li><strong>Tabs:</strong> URLs, titles, favicon URLs, and window IDs — used to sync your open tabs to your own server.</li>
+        <li><strong>Bookmarks:</strong> Titles, URLs, folder structure, and positions — used for bookmark sync.</li>
+        <li><strong>History:</strong> Recent browser history entries — used to backfill sync gaps after a crash or offline period.</li>
+        <li><strong>Storage:</strong> Local settings (server URL, device token, sync preferences) are stored in the browser's local extension storage.</li>
+      </ul>
+
+      <h2>2. Where your data goes</h2>
+      <p>
+        All synced data is sent <strong>only</strong> to the self-hosted KeepSync server URL you configure in the extension settings.
+        There is no third-party server, analytics provider, or cloud backend operated by the extension authors.
+      </p>
+
+      <h2>3. Data retention</h2>
+      <p>
+        Data is retained on <em>your</em> server for as long as you choose to keep it.
+        You can purge synced data at any time from the extension's <strong>Advanced</strong> settings tab
+        or by deleting the server's SQLite database file.
+      </p>
+
+      <h2>4. Permissions rationale</h2>
+      <ul>
+        <li><code>tabs</code> — Required to read and sync open tabs.</li>
+        <li><code>bookmarks</code> — Required to read and write bookmarks for sync.</li>
+        <li><code>history</code> — Required to backfill missed events after offline periods.</li>
+        <li><code>downloads</code> — Used only when you explicitly export a backup from the settings page.</li>
+        <li><code>storage</code> — Stores local configuration and cached data.</li>
+        <li><code>alarms</code> — Schedules periodic background sync.</li>
+        <li><code>host_permissions</code> — Allows the extension to reach your self-hosted server on any domain.</li>
+      </ul>
+
+      <h2>5. Open source</h2>
+      <p>
+        The full source code is available at
+        <a href="https://github.com/keepsync/extension" target="_blank" rel="noopener">github.com/keepsync/extension</a>.
+        You can inspect exactly what the extension does and build it yourself.
+      </p>
+
+      <h2>6. Contact</h2>
+      <p>
+        If you have questions about this policy, open an issue on GitHub.
+      </p>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>
+        KeepSync is licensed under the MIT License.
+        <a href="/">Home</a> ·
+        <a href="https://github.com/keepsync/extension">GitHub</a>
+      </p>
+    </div>
+  </footer>
+</body>
+</html>
