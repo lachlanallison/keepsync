@@ -1,0 +1,22 @@
+# KeepSync
+# https://lachlanallison.github.io/keepsync/
+
+> Self-hosted, open-source browser extension for syncing tabs and bookmarks across your own devices. Privacy-focused — you host the server, no third-party sync service required.
+
+## Pages
+- /
+- /privacy.html
+
+## Product
+- Chrome and Firefox extensions
+- Self-hosted sync server (Go)
+- Real-time tab and bookmark sync across paired devices
+- Multiple pairing methods
+
+## Install
+- Firefox: https://addons.mozilla.org/en-US/firefox/addon/keepsync/
+- Source and self-host setup: https://github.com/lachlanallison/keepsync
+
+## About
+- Built by Lachlan Allison: https://lachlanallison.com/
+- Privacy policy: /privacy.html
